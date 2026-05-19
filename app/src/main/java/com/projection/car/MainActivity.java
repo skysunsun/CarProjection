@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)) {
                 UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-                mUsbAccessory = accessory;
                 if (accessory != null) {
+                    mUsbAccessory = accessory;
                     if (mUsbManager.hasPermission(accessory)) {
                         openAccessory(accessory);
                     } else {
@@ -231,8 +231,8 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onActivityResult(int paramInt1, int paramInt2, Intent paramIntent) {
         if (paramInt1 == REQUEST_CODE) {
-            mMsgProcess.mediaPermissionOk(this, paramInt2, paramIntent);
             if (paramInt2 == RESULT_OK && paramIntent != null) {
+                mMsgProcess.mediaPermissionOk(this, paramInt2, paramIntent);
                 mMsgProcess.startReadAudio();
             } else {
                 log("media projection permission denied");
