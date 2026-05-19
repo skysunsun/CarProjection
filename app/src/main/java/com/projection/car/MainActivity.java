@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                 mMsgProcess.mediaPermissionOk(this, paramInt2, paramIntent);
                 mMsgProcess.startReadAudio();
             } else {
-                log("media projection permission denied");
+                log("screen capture unavailable, permission denied, resultCode=" + paramInt2);
             }
         }
     }

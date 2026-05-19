@@ -193,6 +193,10 @@ public class MsgProcess {
         mAudioReadHandler.sendEmptyMessage(AudioHandler.AUDIO_START);
     }
 
+    private void sendCommand(int command) {
+        sendCommand(command, null);
+    }
+
     private void sendCommand(int command, byte[] payload) {
         mUsbWriteHandler.obtainMessage(command, exportCMDMsg(command, payload)).sendToTarget();
     }
@@ -585,8 +589,8 @@ public class MsgProcess {
                                                 } catch (InvalidProtocolBufferException e) {
                                                     e.printStackTrace();
                                                 }
-                                                sendCommand(MSG_CMD_SCREEN_ON, null);
-                                                sendCommand(MSG_CMD_FOREGROUND, null);
+                                                sendCommand(MSG_CMD_SCREEN_ON);
+                                                sendCommand(MSG_CMD_FOREGROUND);
                                                 CarlifeAuthenResultProto.CarlifeAuthenResult.Builder builder = CarlifeAuthenResultProto.CarlifeAuthenResult.newBuilder();
                                                 builder.setResult(true);
                                                 sendCommand(MSG_CMD_MD_AUTHEN_RESULT, builder.build().toByteArray());
