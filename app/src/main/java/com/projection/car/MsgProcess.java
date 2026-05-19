@@ -19,7 +19,6 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.view.Surface;
 import android.view.WindowManager;
@@ -389,7 +388,7 @@ public class MsgProcess {
         }
 
         @Override
-        public void handleMessage(@NonNull Message msg) {
+        public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case AUDIO_START:
@@ -497,7 +496,7 @@ public class MsgProcess {
         inthread.start();
         mUsbReadHandler = new Handler(inthread.getLooper()) {
             @Override
-            public void handleMessage(@NonNull Message msg) {
+            public void handleMessage(Message msg) {
                 super.handleMessage(msg);
                 switch (msg.what) {
                     case 0: {
@@ -660,7 +659,7 @@ public class MsgProcess {
         outthread.start();
         mUsbWriteHandler = new Handler(outthread.getLooper()) {
             @Override
-            public void handleMessage(@NonNull Message msg) {
+            public void handleMessage(Message msg) {
                 super.handleMessage(msg);
 
                 try {

@@ -7,7 +7,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
 import android.view.accessibility.AccessibilityEvent;
 
 import static com.projection.car.Utils.log;
@@ -68,7 +67,12 @@ public class ForgroundService extends AccessibilityService {
                         manager.createNotificationChannel(channel);
                     }
                 }
-                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
+                Notification.Builder notificationBuilder;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    notificationBuilder = new Notification.Builder(this, channelId);
+                } else {
+                    notificationBuilder = new Notification.Builder(this);
+                }
                 final Notification xiriNotification = notificationBuilder.setOngoing(true)
                         .setContentText("projection car")
                         .setWhen(System.currentTimeMillis())
