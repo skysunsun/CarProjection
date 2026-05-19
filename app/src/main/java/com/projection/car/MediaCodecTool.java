@@ -16,7 +16,6 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjection.Callback;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -83,12 +82,12 @@ public class MediaCodecTool {
 
             mMediaCodec.setCallback(new MediaCodec.Callback() {
                 @Override
-                public void onInputBufferAvailable(@NonNull MediaCodec codec, int index) {
+                public void onInputBufferAvailable(MediaCodec codec, int index) {
 
                 }
 
                 @Override
-                public void onOutputBufferAvailable(@NonNull MediaCodec codec, int index, @NonNull MediaCodec.BufferInfo bufferInfo) {
+                public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo bufferInfo) {
                     try {
                         ByteBuffer outputBuffer = mMediaCodec.getOutputBuffer(index);
                         byte[] outData = new byte[bufferInfo.size];
@@ -141,12 +140,12 @@ public class MediaCodecTool {
                 }
 
                 @Override
-                public void onError(@NonNull MediaCodec codec, @NonNull MediaCodec.CodecException e) {
+                public void onError(MediaCodec codec, MediaCodec.CodecException e) {
 
                 }
 
                 @Override
-                public void onOutputFormatChanged(@NonNull MediaCodec codec, @NonNull MediaFormat format) {
+                public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
 
                 }
             });

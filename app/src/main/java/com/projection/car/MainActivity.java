@@ -1,5 +1,7 @@
 package com.projection.car;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.pm.PackageManager;
 import android.content.BroadcastReceiver;
@@ -15,10 +17,6 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
@@ -36,11 +34,12 @@ import static com.projection.car.Utils.getRootAhth;
 import static com.projection.car.Utils.log;
 import static com.projection.car.Utils.logAll;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
 
     private static final String ACTION_USB_PERMISSION = "org.ammlab.android.app.helloadk.action.USB_PERMISSION";
     private static final int PERMISSION_REQUEST_CODE = 101;
+    private static final int HOLO_LIGHT_DIALOG_THEME = android.R.style.Theme_Holo_Light_Dialog;
 
 
     private Context mContext;
@@ -350,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
             log("***ACCESSIBILITY IS DISABLED***");
         }
         //跳转设置打开无障碍
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.Theme_AppCompat_DayNight_Dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext, HOLO_LIGHT_DIALOG_THEME);
         builder.setTitle("权限申请");
         builder.setMessage("应用需要开启辅助功能,如果取消部分功能不可用");
         builder.setPositiveButton("确定开启", new DialogInterface.OnClickListener() {
@@ -376,19 +375,19 @@ public class MainActivity extends AppCompatActivity {
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> permissions = new ArrayList<>();
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(android.Manifest.permission.RECORD_AUDIO);
             }
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
             if (!permissions.isEmpty()) {
-                ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+                requestPermissions(permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
             }
         }
 
         if (Build.VERSION.SDK_INT < 21) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.Theme_AppCompat_DayNight_Dialog);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, HOLO_LIGHT_DIALOG_THEME);
 //            builder.setTitle("权限申请");
             builder.setMessage("应用需要android 5.1 版本以上运行");
 //            builder.setPositiveButton("退出", new DialogInterface.OnClickListener() {
@@ -409,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (Build.VERSION.SDK_INT < 24) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.Theme_AppCompat_DayNight_Dialog);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, HOLO_LIGHT_DIALOG_THEME);
 //            builder.setTitle("权限申请");
             builder.setMessage("车机反控功能需要android 7.0版本及以上");
             builder.setPositiveButton("了解", new DialogInterface.OnClickListener() {
