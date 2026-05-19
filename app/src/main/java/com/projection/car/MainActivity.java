@@ -1,6 +1,7 @@
 package com.projection.car;
 
 import android.app.PendingIntent;
+import android.content.pm.PackageManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,6 +15,8 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -32,12 +35,12 @@ import static com.projection.car.Utils.REQUEST_CODE;
 import static com.projection.car.Utils.getRootAhth;
 import static com.projection.car.Utils.log;
 import static com.projection.car.Utils.logAll;
-import static com.projection.car.Utils.pauseSong;
 
 public class MainActivity extends AppCompatActivity {
 
 
     private static final String ACTION_USB_PERMISSION = "org.ammlab.android.app.helloadk.action.USB_PERMISSION";
+    private static final int PERMISSION_REQUEST_CODE = 101;
 
 
     private Context mContext;
@@ -106,7 +109,14 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)) {
                 UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-                openAccessory(mUsbAccessory);
+                mUsbAccessory = accessory;
+                if (accessory != null) {
+                    if (mUsbManager.hasPermission(accessory)) {
+                        openAccessory(accessory);
+                    } else {
+                        mUsbManager.requestPermission(accessory, createUsbPermissionIntent());
+                    }
+                }
                 //检测到us连接
                 log("USB_ACCESSORY_ATTACHED " + accessory);
             }
@@ -221,10 +231,13 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onActivityResult(int paramInt1, int paramInt2, Intent paramIntent) {
         if (paramInt1 == REQUEST_CODE) {
-
             mMsgProcess.mediaPermissionOk(this, paramInt2, paramIntent);
+            if (paramInt2 == RESULT_OK && paramIntent != null) {
+                mMsgProcess.startReadAudio();
+            } else {
+                log("media projection permission denied");
+            }
         }
-        mMsgProcess.startReadAudio();
     }
 
 
@@ -237,6 +250,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void openAccessory(UsbAccessory accessory) {
         log("openAccessory");
+        if (accessory == null) {
+            log("accessory is null");
+            return;
+        }
         mFileDescriptor = mUsbManager.openAccessory(accessory);
 
         if (mFileDescriptor != null) {
@@ -283,12 +300,19 @@ public class MainActivity extends AppCompatActivity {
                 openAccessory(mUsbAccessory);
             } else {
                 log("accessories null per");
-                PendingIntent mPermissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), 0);
-                mUsbManager.requestPermission(accessory, mPermissionIntent);
+                mUsbManager.requestPermission(accessory, createUsbPermissionIntent());
             }
         } else {
             log("accessories null");
         }
+    }
+
+    private PendingIntent createUsbPermissionIntent() {
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        return PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), flags);
     }
 
 
@@ -350,6 +374,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ArrayList<String> permissions = new ArrayList<>();
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(android.Manifest.permission.RECORD_AUDIO);
+            }
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+            if (!permissions.isEmpty()) {
+                ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+            }
+        }
+
         if (Build.VERSION.SDK_INT < 21) {
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.Theme_AppCompat_DayNight_Dialog);
 //            builder.setTitle("权限申请");
