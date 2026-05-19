@@ -26,6 +26,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.baidu.carlife.protobuf.CarlifeCarHardKeyCodeProto;
+import com.baidu.carlife.protobuf.CarlifeFeatureConfigListProto;
+import com.baidu.carlife.protobuf.CarlifeFeatureConfigProto;
 import com.baidu.carlife.protobuf.CarlifeMusicInitProto;
 import com.baidu.carlife.protobuf.CarlifeTouchActionProto;
 import com.example.car.CarlifeAuthenResultProto;
@@ -51,11 +53,14 @@ import static com.projection.car.Utils.KEYCODE_SEEK_ADD;
 import static com.projection.car.Utils.KEYCODE_SEEK_SUB;
 import static com.projection.car.Utils.MEDIA;
 import static com.projection.car.Utils.MSG_CMD_FOREGROUND;
+import static com.projection.car.Utils.MSG_CMD_HU_FEATURE_CONFIG_RESPONSE;
 import static com.projection.car.Utils.MSG_CMD_HU_INFO;
 import static com.projection.car.Utils.MSG_CMD_HU_PROTOCOL_VERSION;
 import static com.projection.car.Utils.MSG_CMD_MD_AUTHEN_RESULT;
+import static com.projection.car.Utils.MSG_CMD_MD_FEATURE_CONFIG_REQUEST;
 import static com.projection.car.Utils.MSG_CMD_MD_INFO;
 import static com.projection.car.Utils.MSG_CMD_PROTOCOL_VERSION_MATCH_STATUS;
+import static com.projection.car.Utils.MSG_CMD_SCREEN_ON;
 import static com.projection.car.Utils.MSG_CMD_STATISTIC_INFO;
 import static com.projection.car.Utils.MSG_CMD_VIDEO_ENCODER_INIT;
 import static com.projection.car.Utils.MSG_CMD_VIDEO_ENCODER_INIT_DONE;
@@ -186,6 +191,63 @@ public class MsgProcess {
 
     public void startReadAudio() {
         mAudioReadHandler.sendEmptyMessage(AudioHandler.AUDIO_START);
+    }
+
+    private void sendCommand(int command) {
+        sendCommand(command, null);
+    }
+
+    private void sendCommand(int command, byte[] payload) {
+        mUsbWriteHandler.obtainMessage(command, exportCMDMsg(command, payload)).sendToTarget();
+    }
+
+    private byte[] buildDeviceInfoPayload() {
+        CarlifeDeviceInfoProto.CarlifeDeviceInfo.Builder builder = CarlifeDeviceInfoProto.CarlifeDeviceInfo.newBuilder();
+        builder.setOs("Android");
+        builder.setBoard(Build.BOARD);
+        builder.setBootloader(Build.BOOTLOADER);
+        builder.setBrand(Build.BRAND);
+        builder.setCpuAbi(Build.CPU_ABI);
+        builder.setCpuAbi2(Build.CPU_ABI2);
+        builder.setDevice(Build.DEVICE);
+        builder.setDisplay(Build.DISPLAY);
+        builder.setFingerprint(Build.FINGERPRINT);
+        builder.setHardware(Build.HARDWARE);
+        builder.setHost(Build.HOST);
+        builder.setCid(Build.ID);
+        builder.setManufacturer(Build.MANUFACTURER);
+        builder.setModel(Build.MODEL);
+        builder.setProduct(Build.PRODUCT);
+        builder.setSerial(Build.SERIAL);
+        builder.setCodename(Build.VERSION.CODENAME);
+        builder.setIncremental(Build.VERSION.INCREMENTAL);
+        builder.setRelease(Build.VERSION.RELEASE);
+        builder.setSdk(Build.VERSION.SDK);
+        builder.setSdkInt(Build.VERSION.SDK_INT);
+        return builder.build().toByteArray();
+    }
+
+    private byte[] buildFeatureConfigPayload() {
+        CarlifeFeatureConfigListProto.CarlifeFeatureConfigList.Builder listBuilder = CarlifeFeatureConfigListProto.CarlifeFeatureConfigList.newBuilder();
+        addFeatureConfig(listBuilder, "VOICE_WAKEUP", 1);
+        addFeatureConfig(listBuilder, "BLUETOOTH_AUTO_PAIR", 0);
+        addFeatureConfig(listBuilder, "BLUETOOTH_INTERNAL_UI", 0);
+        addFeatureConfig(listBuilder, "FOCUS_UI", 0);
+        addFeatureConfig(listBuilder, "VOICE_MIC", 0);
+        addFeatureConfig(listBuilder, "MEDIA_SAMPLE_RATE", 1);
+        addFeatureConfig(listBuilder, "AUDIO_TRANSMISSION_MODE", 0);
+        addFeatureConfig(listBuilder, "CONTENT_ENCRYPTION", 0);
+        addFeatureConfig(listBuilder, "ENGINE_TYPE", 0);
+        addFeatureConfig(listBuilder, "INPUT_DISABLE", 0);
+        listBuilder.setCnt(listBuilder.getFeatureConfigCount());
+        return listBuilder.build().toByteArray();
+    }
+
+    private void addFeatureConfig(CarlifeFeatureConfigListProto.CarlifeFeatureConfigList.Builder listBuilder, String key, int value) {
+        CarlifeFeatureConfigProto.CarlifeFeatureConfig.Builder builder = CarlifeFeatureConfigProto.CarlifeFeatureConfig.newBuilder();
+        builder.setKey(key);
+        builder.setValue(value);
+        listBuilder.addFeatureConfig(builder.build());
     }
 
 
@@ -481,16 +543,8 @@ public class MsgProcess {
                                                     e.printStackTrace();
                                                 }
 
-                                                CarlifeDeviceInfoProto.CarlifeDeviceInfo.Builder builder = CarlifeDeviceInfoProto.CarlifeDeviceInfo.newBuilder();
-                                                builder.setSdkInt(29);
-                                                builder.setSdk("29");
-                                                builder.setSerial("unknown");
-                                                builder.setCid("QKQ1.190828.002");
-                                                builder.setBoard("sdm845");
-                                                builder.setOs("Android");
-                                                builder.setRelease("10");
-                                                builder.setHost("c4-miui-ota-bd47.bj");
-                                                mUsbWriteHandler.obtainMessage(MSG_CMD_MD_INFO, exportCMDMsg(MSG_CMD_MD_INFO, builder.build().toByteArray())).sendToTarget();
+                                                sendCommand(MSG_CMD_MD_INFO, buildDeviceInfoPayload());
+                                                sendCommand(MSG_CMD_HU_FEATURE_CONFIG_RESPONSE, buildFeatureConfigPayload());
                                             }
                                             break;
                                             case MSG_CMD_VIDEO_ENCODER_INIT: {
@@ -512,7 +566,7 @@ public class MsgProcess {
                                                 builder.setFrameRate(mVideoBit);
                                                 builder.setWidth((int) mVISWidth);
                                                 builder.setHeight((int) mVISHeight);
-                                                mUsbWriteHandler.obtainMessage(MSG_CMD_VIDEO_ENCODER_INIT_DONE, exportCMDMsg(MSG_CMD_VIDEO_ENCODER_INIT_DONE, msgdata)).sendToTarget();
+                                                mUsbWriteHandler.obtainMessage(MSG_CMD_VIDEO_ENCODER_INIT_DONE, exportCMDMsg(MSG_CMD_VIDEO_ENCODER_INIT_DONE, builder.build().toByteArray())).sendToTarget();
 
 
                                             }
@@ -535,9 +589,15 @@ public class MsgProcess {
                                                 } catch (InvalidProtocolBufferException e) {
                                                     e.printStackTrace();
                                                 }
+                                                sendCommand(MSG_CMD_SCREEN_ON);
+                                                sendCommand(MSG_CMD_FOREGROUND);
                                                 CarlifeAuthenResultProto.CarlifeAuthenResult.Builder builder = CarlifeAuthenResultProto.CarlifeAuthenResult.newBuilder();
                                                 builder.setResult(true);
-                                                mUsbWriteHandler.obtainMessage(MSG_CMD_MD_AUTHEN_RESULT, exportCMDMsg(MSG_CMD_MD_AUTHEN_RESULT, builder.build().toByteArray())).sendToTarget();
+                                                sendCommand(MSG_CMD_MD_AUTHEN_RESULT, builder.build().toByteArray());
+                                            }
+                                            break;
+                                            case MSG_CMD_MD_FEATURE_CONFIG_REQUEST: {
+                                                sendCommand(MSG_CMD_HU_FEATURE_CONFIG_RESPONSE, buildFeatureConfigPayload());
                                             }
                                             break;
 
@@ -607,7 +667,10 @@ public class MsgProcess {
                     switch (msg.what) {
                         case MSG_CMD_PROTOCOL_VERSION_MATCH_STATUS:
                         case MSG_CMD_MD_INFO:
-                        case MSG_CMD_MD_AUTHEN_RESULT: {
+                        case MSG_CMD_MD_AUTHEN_RESULT:
+                        case MSG_CMD_SCREEN_ON:
+                        case MSG_CMD_FOREGROUND:
+                        case MSG_CMD_HU_FEATURE_CONFIG_RESPONSE: {
                             byte[] carLifeMsg = (byte[]) msg.obj;
                             byte[] headmsg = new byte[8];
                             headmsg[3] = CMD;
