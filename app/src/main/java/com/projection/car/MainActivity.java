@@ -348,7 +348,7 @@ public class MainActivity extends Activity {
             log("***ACCESSIBILITY IS DISABLED***");
         }
         //跳转设置打开无障碍
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext, android.R.style.Theme_Holo_Light_Dialog);
         builder.setTitle("权限申请");
         builder.setMessage("应用需要开启辅助功能,如果取消部分功能不可用");
         builder.setPositiveButton("确定开启", new DialogInterface.OnClickListener() {
@@ -386,7 +386,7 @@ public class MainActivity extends Activity {
         }
 
         if (Build.VERSION.SDK_INT < 21) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, android.R.style.Theme_Holo_Light_Dialog);
 //            builder.setTitle("权限申请");
             builder.setMessage("应用需要android 5.1 版本以上运行");
 //            builder.setPositiveButton("退出", new DialogInterface.OnClickListener() {
@@ -407,7 +407,7 @@ public class MainActivity extends Activity {
         }
 
         if (Build.VERSION.SDK_INT < 24) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext, android.R.style.Theme_Holo_Light_Dialog);
 //            builder.setTitle("权限申请");
             builder.setMessage("车机反控功能需要android 7.0版本及以上");
             builder.setPositiveButton("了解", new DialogInterface.OnClickListener() {
